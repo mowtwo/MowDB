@@ -7,7 +7,8 @@
     "test": "test"
   },
   "scripts": {
-    "test": "ts-node ./test/DbTable.test.ts"
+    "table": "ts-node ./test/DbTable.test.ts",
+    "context": "ts-node ./test/DbContext.test.ts"
   },
   "keywords": [],
   "author": "",

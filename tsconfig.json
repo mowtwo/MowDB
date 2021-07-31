@@ -1,6 +1,10 @@
 {
   "compilerOptions": {
     "target": "ES5",
-    "downlevelIteration": true
+    "downlevelIteration": true,
+    "allowUnusedLabels": true,
+    "noUnusedParameters": false,
+    "noUnusedLocals": false,
+    "lib": ["ES6", "ES7", "DOM"]
   }
 }
