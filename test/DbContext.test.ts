@@ -8,8 +8,15 @@ enum Gender {
   Unkown
 }
 
-class Entity {
+class User {
   constructor(
+    public account: string,
+    public password: string
+  ) { }
+}
+class UserInfo {
+  constructor(
+    public uid: number | string,
     public name: string,
     public age: number,
     public gender: Gender
@@ -17,15 +24,17 @@ class Entity {
 }
 
 const ctx = new DbContext('demo')
-const tb = ctx.createTable('test', Entity)
+const user = ctx.createTable('User', User)
+const info = ctx.createTable('Info', UserInfo)
 
-ctx.insert(tb, 'mowtwo', 23, Gender.Male)
-const getTb = tb.call(ctx) as DbTable<Entity>
-
-console.log(getTb.find().toArray())
-getTb.update({
-  name: Eq('mowtwo')
-}, {
-  age: 2
+ctx.insert(user, 'admin', 'admin')
+ctx.insert(info, 1, 'mowtwo', 22, Gender.Male)
+const res = ctx.find(user, {
+  relation: {
+    sub: info,
+    masterKey: 'id',
+    subKey: 'uid'
+  }
 })
-console.log(getTb.find().toArray())
+
+console.log(JSON.stringify(res))

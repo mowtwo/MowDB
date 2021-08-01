@@ -3,9 +3,9 @@ import type { FindFn } from "./FindOpr"
 import type { SortList, SortMode } from "./Sortable"
 
 
-type BaseType = string | number | symbol
+export type BaseType = string | number | symbol
 type PartialRecord<U extends BaseType, T> = Partial<Record<U, T>>
-type FindOption<U extends BaseType> = PartialRecord<U, FindFn> & Partial<{
+export type FindOption<U extends BaseType = BaseType> = PartialRecord<U, FindFn> & Partial<{
   sortBy: PartialRecord<U | 'id', SortMode>;
   groupBy: U[];
   id: number | string;

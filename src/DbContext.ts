@@ -1,5 +1,6 @@
 import DbTable from "./DbTable";
-import { CtorOf } from "./typeUtil";
+import { Eq } from "./FindOpr";
+import { ContextFindOptions, CtorOf } from "./typeUtil";
 
 export default class DbContext {
   private tableEntityMap: Map<DbTable<any>, CtorOf<any>> = new Map()
@@ -40,11 +41,59 @@ export default class DbContext {
     this.checkCtx(ref)
     const tb = this.fromRefGetTable(ref)
     const Entity = this.getTableEntity(tb)
-    tb.add(new Entity(...entityInitArgs))
+    if (entityInitArgs.length >= Entity.length) {
+      return tb.add(new Entity(...entityInitArgs))
+    }
+    throw new Error(`entity init arguments length must be greate ${Entity.length}`)
+  }
+  find<MT, ST = {}>(main: TableRef<MT>, options?: ContextFindOptions<MT, ST>) {
+    this.checkCtx(main)
+    const tb = this.fromRefGetTable(main)
+    const mainList = tb.find(options?.where ?? {})
+    if (!options || !options.relation) {
+      return mainList.toObject()
+    } else {
+      const res = mainList.toObject()
+      return {
+        ...res,
+        rows: res.rows.map(item => {
+          let subName = ''
+          let subRef: TableRef<ST> = null
+          let subFindType: 'find' | 'findOne' = null
+          let { sub, subKey, masterKey } = options.relation
+          if (Array.isArray(sub)) {
+            subName = sub[0].tbName
+            subRef = sub[0]
+            subFindType = 'find'
+          } else {
+            subName = sub.tbName
+            subRef = sub
+            subFindType = 'findOne'
+          }
+          this.checkCtx(subRef)
+          const subTb = this.fromRefGetTable(subRef)
+          if (subFindType == 'find') {
+            return {
+              ...item,
+              [subName + 'List']: subTb.find({
+                [subKey]: Eq(item[masterKey])
+              }).toArray()
+            }
+          } else {
+            return {
+              ...item,
+              [subName]: subTb.findOne({
+                [subKey]: Eq(item[masterKey])
+              }).plainObjectWithId
+            }
+          }
+        })
+      }
+    }
   }
 }
 
-interface TableRef<T, D extends DbContext> {
+export interface TableRef<T, D extends DbContext = DbContext> {
   (this: ThisType<D>): DbTable<T>;
   ctx: D;
   tbName: string;
